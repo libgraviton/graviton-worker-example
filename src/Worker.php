@@ -1,4 +1,7 @@
 <?php
+/**
+ * example worker showing how to use graviton events
+ */
 
 namespace Graviton\Worker;
 
@@ -70,35 +73,23 @@ class Worker
 
         echo 'processing '.$obj->statusUrl.PHP_EOL;
 
+        // first, always set status to 'working'!
         $this->setEventStatus($obj, self::STATUS_WORKING);
 
-        // send to hipchat
-        $text = 'I received an event on <i>'.$obj->event.'</i>. The status I updated is '.$obj->statusUrl. ' - '.
-            'the affected document lies at '.$obj->publicUrl;
-
-        $notification = new \stdClass();
-        $notification->color = 'green';
-        $notification->message = $text;
-        $notification->notify = true;
-
         try {
-            Request::post(
-                'https://api.hipchat.com/v2/room/1914209/notification?' .
-                'auth_token=xM4CA5Fc9FZtjRFyOADFv57Ln7hVO4kjlfzkJ0t8'
-            )->sendsJson()
-                ->body($notification)
-                ->send();
+            // implement your logic
         } catch (\Exception $e) {
-            $this->setEventStatus($obj, self::STATUS_FAILED, 'Could not POST to hipchat.com');
+            // catch your exceptions
+            $this->setEventStatus($obj, self::STATUS_FAILED, 'Some error happened!');
             return;
         }
 
+        // set status to 'done'
         $this->setEventStatus($obj, self::STATUS_DONE);
 
         echo 'FINISHED processing '.$obj->statusUrl.' (memory = '.number_format(memory_get_usage() / 1024) . ' KiB' . PHP_EOL;
 
         gc_collect_cycles();
-        file_put_contents(__DIR__.'mem', number_format(memory_get_usage() / 1024) . ' KiB' . PHP_EOL, FILE_APPEND);
 
         return;
     }
