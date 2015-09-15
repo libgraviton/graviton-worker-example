@@ -1,0 +1,22 @@
+{
+  "name": "graviton/graviton-worker-example",
+  "description": "A simple Graviton worker serving as an example",
+  "type": "cli",
+  "license": "GPL",
+  "authors": [
+    {
+      "name": "Dario Nuevo",
+      "email": "dario.nuevo@swisscom.com"
+    }
+  ],
+  "require": {
+    "php": ">=5.5",
+    "videlalvaro/php-amqplib": "2.5.*",
+    "nategood/httpful": "^0.2.19"
+  },
+  "autoload": {
+    "psr-4": {
+      "Graviton\\Worker\\": "src/"
+    }
+  }
+}
