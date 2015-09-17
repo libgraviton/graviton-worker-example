@@ -67,17 +67,23 @@ class Worker
     {
         $obj = json_decode($msg->body);
 
-        if (is_null($obj->statusUrl)) {
+        if (is_null($obj->status->{'$ref'})) {
             return;
+        } else {
+            $statusUrl = $obj->status->{'$ref'};
         }
 
-        echo 'processing '.$obj->statusUrl.PHP_EOL;
+        echo 'processing '.$statusUrl.PHP_EOL;
 
         // first, always set status to 'working'!
         $this->setEventStatus($obj, self::STATUS_WORKING);
 
         try {
-            // implement your logic
+            // implement your logic - here we will just print the affected document
+            $document = Request::get($obj->document->{'$ref'})
+                ->send();
+
+            echo 'DOCUMENT '.$obj->document->{'$ref'}.' = '.json_encode($document->body).PHP_EOL;
         } catch (\Exception $e) {
             // catch your exceptions
             $this->setEventStatus($obj, self::STATUS_FAILED, 'Some error happened!');
@@ -87,7 +93,7 @@ class Worker
         // set status to 'done'
         $this->setEventStatus($obj, self::STATUS_DONE);
 
-        echo 'FINISHED processing '.$obj->statusUrl.' (memory = '.number_format(memory_get_usage() / 1024) . ' KiB' . PHP_EOL;
+        echo 'FINISHED processing '.$statusUrl.' (memory = '.number_format(memory_get_usage() / 1024) . ' KiB' . PHP_EOL;
 
         gc_collect_cycles();
 
@@ -159,7 +165,7 @@ class Worker
     private function setEventStatus($obj, $status, $errorMsg = null)
     {
         try {
-            $statusObj = Request::get($obj->statusUrl)
+            $statusObj = Request::get($obj->status->{'$ref'})
                 ->send();
 
             $workerId = $this->getSetting('workerId');
@@ -176,7 +182,7 @@ class Worker
                     $statusObj->body->errorInformation[$workerId] = $errorMsg;
                 }
 
-                Request::put($obj->statusUrl)
+                Request::put($obj->status->{'$ref'})
                     ->sendsJson()
                     ->body($statusObj->body)
                     ->send();
