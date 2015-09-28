@@ -87,6 +87,7 @@ class Worker
         } catch (\Exception $e) {
             // catch your exceptions
             $this->setEventStatus($obj, self::STATUS_FAILED, 'Some error happened!');
+            echo 'SET FAILED ON '.$statusUrl.PHP_EOL;
             return;
         }
 
@@ -179,7 +180,12 @@ class Worker
 
                 // error information?
                 if (!is_null($errorMsg)) {
-                    $statusObj->body->errorInformation[$workerId] = $errorMsg;
+                    $informationObject = new \stdClass();
+                    $informationObject->workerId = $workerId;
+                    $informationObject->type = 'error';
+                    $informationObject->content = $errorMsg;
+
+                    $statusObj->body->information[] = $informationObject;
                 }
 
                 Request::put($obj->status->{'$ref'})
